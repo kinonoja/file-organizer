@@ -1,20 +1,34 @@
-"""Core file organization logic"""
+"""Core file organization logic."""
 
 from __future__ import annotations
 
 import logging
 import shutil
-from dataclasses import dataclasses
-from pathlib import pathlib
+from dataclasses import dataclass
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Map file extensions → category folder names
 CATEGORIES: dict[str, set[str]] = {
     "Images": {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".heic"},
     "Documents": {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt"},
     "Videos": {".mp4", ".mov", ".avi", ".mkv", ".webm", ".flv"},
     "Audio": {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"},
-    "Code": {".py", ".js", ".ts", ".java", ".cpp", ".c", ".go", ".rs", ".rb", ".php", ".html", ".css"},
+    "Code": {
+        ".py",
+        ".js",
+        ".ts",
+        ".java",
+        ".cpp",
+        ".c",
+        ".go",
+        ".rs",
+        ".rb",
+        ".php",
+        ".html",
+        ".css",
+    },
     "Archives": {".zip", ".tar", ".gz", ".rar", ".7z", ".bz2"},
     "Text": {".txt", ".md", ".rtf", ".log"},
     "Data": {".csv", ".json", ".xml", ".yaml", ".yml", ".sql"},
@@ -22,7 +36,8 @@ CATEGORIES: dict[str, set[str]] = {
 
 DEFAULT_CATEGORY = "Others"
 
-@dataclasse
+
+@dataclass
 class MoveResult:
     """Result of a single file move operation."""
 
@@ -31,6 +46,7 @@ class MoveResult:
     category: str
     moved: bool
     reason: str = ""
+
 
 def get_category(file_path: Path) -> str:
     """Return the category folder name for a given file."""
@@ -42,7 +58,7 @@ def get_category(file_path: Path) -> str:
 
 
 def resolve_collision(destination: Path) -> Path:
-    """If destinvation exists, append_1, _2, ... unitl free."""
+    """If destination exists, append _1, _2, ... until free."""
     if not destination.exists():
         return destination
 
@@ -55,7 +71,7 @@ def resolve_collision(destination: Path) -> Path:
         counter += 1
 
 
-def organize_folder(source: Path, drt_run: bool = False) -> list[MoveResult]:
+def organize_folder(source: Path, dry_run: bool = False) -> list[MoveResult]:
     """Organize files in `source` into category subfolders.
 
     Args:
@@ -84,9 +100,7 @@ def organize_folder(source: Path, drt_run: bool = False) -> list[MoveResult]:
 
         if dry_run:
             logger.info("[DRY-RUN] Would move %s → %s", item.name, destination)
-            results.append(
-                MoveResult(item, destination, category, moved=False, reason="dry-run")
-            )
+            results.append(MoveResult(item, destination, category, moved=False, reason="dry-run"))
             continue
 
         target_dir.mkdir(exist_ok=True)
